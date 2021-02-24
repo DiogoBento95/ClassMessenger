@@ -1,6 +1,5 @@
 package classMessenger;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
@@ -14,16 +13,13 @@ public class ClassMessenger {
     //Server properties.
     public static final int PORT_NUMBER = 6789;
     private ServerSocket serverSocket;
-    private Socket clientSocket;
-
-    private Dispatcher dispatcher;
+    //private Socket clientSocket;----
 
     //Server has to have the clients all in one container.
-    private LinkedList clientList;
+    private LinkedList<Dispatcher> clientList = new LinkedList<>();
 
-    //Server output.
-    private PrintWriter out;
-    private String messageOut;
+    // Entity that'll manage the threads.
+    private ExecutorService threadPool;
 
     //Server will initiate when the constructor generates an instance.
     public  ClassMessenger() throws IOException {
@@ -32,31 +28,47 @@ public class ClassMessenger {
         serverSocket = new ServerSocket(PORT_NUMBER);
         System.out.println("Server is listening on port <" + PORT_NUMBER + ">");
 
-        ExecutorService threadPool = null;
-        threadPool = Executors.newFixedThreadPool(10);
-        threadPool.submit(dispatcher);
 
+        threadPool = Executors.newFixedThreadPool(10);
+
+    }
+
+
+    public void listen() throws IOException {
+
+        // or serverSocket.isBound();
         while(true){
+            //clientSocket = serverSocket.accept();----
 
             //Server will accept if a client tries to connect.
-            clientSocket = serverSocket.accept();
-            clientList.add(clientSocket);
-            System.out.println("New client connected.");
+            Dispatcher dispatcher = new Dispatcher(serverSocket.accept(), this);
 
+            threadPool.submit(dispatcher);
 
-
+            clientList.add(dispatcher);
 
 
         }
 
+    }
 
+
+
+
+    public void broadcast(String message){
+
+        for (Dispatcher client:clientList) {
+            client.receiveBroadcast(message);
+        }
 
     }
+
 
     public static void main(String[] args){
 
         try {
             ClassMessenger classMessenger = new ClassMessenger();
+            classMessenger.listen();
         } catch (IOException e) {
             e.printStackTrace();
         }
