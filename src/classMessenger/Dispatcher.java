@@ -21,7 +21,7 @@ public class Dispatcher implements Runnable{
     //Communication is done with Strings.
     private String messageIn;
 
-    private int clientIndex = 0;
+    //private String name;
 
     //Creates a "wrapper" for the client.
     public Dispatcher(Socket clientSocket, ClassMessenger classMessenger) throws IOException {
@@ -54,8 +54,8 @@ public class Dispatcher implements Runnable{
 
                 if(messageIn.equals("/quit")){
                     classMessenger.broadcast("Client has left the chat.");
+                    in.close();
                     clientSocket.close();
-
                 }
 
             } catch (IOException e) {
